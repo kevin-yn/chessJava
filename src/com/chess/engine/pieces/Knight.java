@@ -31,12 +31,12 @@ public class Knight extends Piece {
 	}
 
 	@Override
-	public boolean isAttacking(int x_cor, int y_cor) {
+	public boolean isAttacking(final Board board, int target_x_cor, int target_y_cor) {
 		return false;
 	}
 	
 	@Override
-	public LinkedList<Move> generatePossibleMoves(Board board) {
+	public LinkedList<Move> generatePossibleMoves(final Board board) {
 		return null;
 	}
 	

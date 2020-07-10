@@ -15,7 +15,7 @@ import java.util.*;
 
 
 public class Board {
-	final private Piece[] boardPiecesArray = new Piece[64];
+	final public Piece[] boardPiecesArray = new Piece[64];
 	final private ArrayList<Piece> whitePiecesArrayList = new ArrayList<Piece>(16);
 	final private ArrayList<Piece> blackPiecesArrayList = new ArrayList<Piece>(16);
 	private Piece whiteKingPiece;
@@ -174,7 +174,7 @@ public class Board {
 	public boolean isUnderattack(PlayerSide attackingSide, int x_cor, int y_cor) {
 		ArrayList<Piece> list = (attackingSide == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
 		for(Piece piece : list) {
-			if(piece.isAlive() && piece.isAttacking(x_cor, y_cor)) {
+			if(piece.isAlive() && piece.isAttacking(this, x_cor, y_cor)) {
 				return true;
 			}
 		}
@@ -264,6 +264,27 @@ public class Board {
 	 */
 	public void pawnPromotionHandler() {
 		
+	}
+	
+	/**
+	 * return the PlayerSide of the piece at input coordinate
+	 */
+	public PlayerSide getPlayerSide(int x_cor, int y_cor) {
+		return boardPiecesArray[x_cor + y_cor * 8].getSide();
+	}
+	
+	/**
+	 * check whether the board is empty at input coordiante
+	 */
+	public boolean isEmptyAt(int x_cor, int y_cor) {
+		return boardPiecesArray[x_cor + y_cor * 8].isEmpty();
+	}
+	
+	/**
+	 * get the piece at input coordinate
+	 */
+	public Piece getPiece(int x_cor, int y_cor) {
+		return boardPiecesArray[x_cor + y_cor * 8];
 	}
 	
 	// ==================================================================================================================

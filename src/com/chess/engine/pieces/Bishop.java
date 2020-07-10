@@ -7,7 +7,7 @@ import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
 import com.chess.engine.pieces.Piece.PieceType;
 
-public class Bishop extends Piece{
+public class Bishop extends Bishop_Rook_Queen{
 	
 	public Bishop(PlayerSide side, int index) {
 		super(side, index);
@@ -33,13 +33,31 @@ public class Bishop extends Piece{
 	}
 	
 	@Override
-	public boolean isAttacking(int x_cor, int y_cor) {
-		return false;
+	public boolean isAttacking(final Board board, int target_x_cor, int target_y_cor) {
+		boolean same_x = (this.x_cor == target_x_cor);
+		boolean same_y = (this.y_cor == target_y_cor);
+		// check whether same_x or same_y
+		if(same_x || same_y) {
+			return false;
+		}
+		// check whether it is on the line
+		if(Math.abs(this.x_cor - target_x_cor) != Math.abs(this.y_cor - target_y_cor)) {
+			return false;
+		}
+		int increment_x = target_x_cor > this.x_cor ? 1 : -1;
+		int increment_y = target_y_cor > this.y_cor ? 1 : -1;
+		return isPathOpen(target_x_cor, target_y_cor, this.x_cor, this.y_cor, increment_x, increment_y, board);
 	}
 	
 	@Override
-	public LinkedList<Move> generatePossibleMoves(Board board) {
-		return null;
+	public LinkedList<Move> generatePossibleMoves(final Board board) {
+		// add diagonal
+		LinkedList<Move> possibleMoves = new LinkedList<Move>();
+		addPossibleMoves(1, 1, possibleMoves, board);
+		addPossibleMoves(1, -1, possibleMoves, board);
+		addPossibleMoves(-1, 1, possibleMoves, board);
+		addPossibleMoves(-1, -1, possibleMoves, board);
+		return possibleMoves;
 	}
 	
 	@Override

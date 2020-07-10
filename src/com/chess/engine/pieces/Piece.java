@@ -37,13 +37,27 @@ public abstract class Piece {
 		this.side = side;
 	}
 
+	protected int getLargerInt(int a, int b) {
+		return (a > b) ? a : b; 
+	}
+	
+	protected int getSmallerInt(int a, int b) {
+		return (a <= b) ? a : b; 
+	}
+	
+	protected boolean validCor(int x, int y) {
+		return x >= 0 && x <= 7 && y >= 0 && y <= 7;
+	}
+	
 	// Constructors
+	
 	public Piece(PlayerSide side, int index) {
 		x_cor = index % 8;
 		y_cor = index / 8;
 		this.side = side;
 		alive = true;
 	}
+	
 	public boolean isAlive() {
 		return alive;
 	}
@@ -66,9 +80,15 @@ public abstract class Piece {
 	
 	public abstract PieceType getType();
 	
-	public abstract boolean isAttacking(int x_cor, int y_cor);
+	/**
+	 * This does not include En Passant, because this function is only used to checkmate and castling
+	 * @param x_cor
+	 * @param y_cor
+	 * @return
+	 */
+	public abstract boolean isAttacking(final Board board, int target_x_cor, int target_y_cor);
 	
-	public abstract LinkedList<Move> generatePossibleMoves(Board board);
+	public abstract LinkedList<Move> generatePossibleMoves(final Board board);
 	
 	public abstract char getLetterSymbol();
 	
