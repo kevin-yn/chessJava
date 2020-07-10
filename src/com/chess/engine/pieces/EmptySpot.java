@@ -1,15 +1,17 @@
 package com.chess.engine.pieces;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
 import com.chess.engine.pieces.Piece.PieceType;
+import com.chess.engine.pieces.Piece.PlayerSide;
 
 public class EmptySpot extends Piece {
 
-	public EmptySpot() {
-		super(PlayerSide.EmptySpot);
+	public EmptySpot(int index) { // special Constructor for EmptySpot
+		super(PlayerSide.EmptySpot, index);
 	}
 	
 	@Override
@@ -33,7 +35,12 @@ public class EmptySpot extends Piece {
 	}
 	
 	@Override
-	public ArrayList<Move> generatePossibleMoves(Board board) {
-		return new ArrayList<Move>();
+	public LinkedList<Move> generatePossibleMoves(Board board) {
+		return null;
+	}
+	
+	@Override
+	public char getLetterSymbol() {
+		return '0';
 	}
 }

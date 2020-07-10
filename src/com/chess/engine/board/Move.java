@@ -25,6 +25,14 @@ public class Move {
 	public int getEnd_y() {
 		return end_y;
 	}
+	
+	public int getStartIndex() {
+		return start_x + start_y * 8;
+	}
+	 
+	public int getEndIndex() {
+		return end_x + end_y * 8;
+	}
 
 	public Piece getCaptured_piece() {
 		return captured_piece;

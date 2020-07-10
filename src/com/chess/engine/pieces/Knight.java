@@ -3,14 +3,16 @@ package com.chess.engine.pieces;
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
 import com.chess.engine.pieces.Piece.PieceType;
+import com.chess.engine.pieces.Piece.PlayerSide;
 
 import java.lang.Math;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Knight extends Piece {
 
-	public Knight(PlayerSide side) {
-		super(side);
+	public Knight(PlayerSide side, int index) {
+		super(side, index);
 	}
 	
 	@Override
@@ -34,7 +36,16 @@ public class Knight extends Piece {
 	}
 	
 	@Override
-	public ArrayList<Move> generatePossibleMoves(Board board) {
-		return new ArrayList<Move>();
+	public LinkedList<Move> generatePossibleMoves(Board board) {
+		return null;
+	}
+	
+	@Override
+	public char getLetterSymbol() {
+		if(side == PlayerSide.White) {
+			return 'n';
+		} else {
+			return 'N';
+		}
 	}
 }

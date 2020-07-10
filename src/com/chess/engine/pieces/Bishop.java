@@ -1,6 +1,7 @@
 package com.chess.engine.pieces;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
@@ -8,8 +9,8 @@ import com.chess.engine.pieces.Piece.PieceType;
 
 public class Bishop extends Piece{
 	
-	public Bishop(PlayerSide side) {
-		super(side);
+	public Bishop(PlayerSide side, int index) {
+		super(side, index);
 	}
 	
 	@Override
@@ -37,8 +38,16 @@ public class Bishop extends Piece{
 	}
 	
 	@Override
-	public ArrayList<Move> generatePossibleMoves(Board board) {
-		return new ArrayList<Move>();
+	public LinkedList<Move> generatePossibleMoves(Board board) {
+		return null;
 	}
 	
+	@Override
+	public char getLetterSymbol() {
+		if(side == PlayerSide.White) {
+			return 'b';
+		} else {
+			return 'B';
+		}
+	}
 }

@@ -1,10 +1,12 @@
 package com.chess.engine.pieces;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
 import com.chess.engine.pieces.Piece.PieceType;
+import com.chess.engine.pieces.Piece.PlayerSide;
 
 public class Rook extends Piece {
 	/**
@@ -12,8 +14,8 @@ public class Rook extends Piece {
 	 * @param moved
 	 */
 
-	public Rook(PlayerSide side) {
-		super(side);
+	public Rook(PlayerSide side, int index) {
+		super(side, index);
 	}
 
 	@Override
@@ -37,7 +39,16 @@ public class Rook extends Piece {
 	}
 	
 	@Override
-	public ArrayList<Move> generatePossibleMoves(Board board) {
-		return new ArrayList<Move>();
+	public LinkedList<Move> generatePossibleMoves(Board board) {
+		return null;
+	}
+	
+	@Override
+	public char getLetterSymbol() {
+		if(side == PlayerSide.White) {
+			return 'r';
+		} else {
+			return 'R';
+		}
 	}
 }
