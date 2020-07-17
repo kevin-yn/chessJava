@@ -11,6 +11,27 @@ public abstract class Piece {
 	protected int x_cor;
 	protected int y_cor;
 	protected PlayerSide side;
+	protected int moveCount; // to record the number of times this Piece is moved
+	
+	public void moveTo(int x_cor, int y_cor) {
+		this.x_cor = x_cor;
+		this.y_cor = y_cor;
+		moveCount++;
+	}
+	
+	public void returnTo(int x_cor, int y_cor) {
+		this.x_cor = x_cor;
+		this.y_cor = y_cor;
+		moveCount--;
+	}
+	
+	public boolean isMoved() {
+		return (moveCount > 0);
+	}
+	
+	public int getMoveCount() {
+		return moveCount;
+	}
 	
 	public int getX_cor() {
 		return x_cor;
@@ -56,6 +77,7 @@ public abstract class Piece {
 		y_cor = index / 8;
 		this.side = side;
 		alive = true;
+		moveCount = 0;
 	}
 	
 	public boolean isAlive() {
@@ -76,8 +98,6 @@ public abstract class Piece {
 	
 	public abstract boolean isEmpty();
 	
-	public abstract boolean isLegalMove(Move move);
-	
 	public abstract PieceType getType();
 	
 	/**
@@ -91,6 +111,10 @@ public abstract class Piece {
 	public abstract LinkedList<Move> generatePossibleMoves(final Board board);
 	
 	public abstract char getLetterSymbol();
+	
+	public static PlayerSide getOppositeSide(PlayerSide side) {
+		return side == PlayerSide.Black ? PlayerSide.White : PlayerSide.Black;
+	}
 	
 	public enum PieceType {
 		King, 

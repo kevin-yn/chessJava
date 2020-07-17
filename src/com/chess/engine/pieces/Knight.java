@@ -26,18 +26,32 @@ public class Knight extends Piece {
 	}
 
 	@Override
-	public boolean isLegalMove(Move move) {
-		return Math.pow(move.getEnd_x() - move.getStart_x(), 2) + Math.pow(move.getEnd_y() - move.getStart_y(), 2) == 5;
-	}
-
-	@Override
 	public boolean isAttacking(final Board board, int target_x_cor, int target_y_cor) {
-		return false;
+		return (Math.pow(this.x_cor - target_x_cor, 2) + Math.pow(this.y_cor - target_y_cor, 2) == 5);
 	}
 	
 	@Override
 	public LinkedList<Move> generatePossibleMoves(final Board board) {
-		return null;
+		LinkedList<Move> possibleMoves = new LinkedList<>();
+		generateOneMove(this.x_cor + 1, this.y_cor + 2, board, possibleMoves);
+		generateOneMove(this.x_cor + 2, this.y_cor + 1, board, possibleMoves);
+		generateOneMove(this.x_cor + 1, this.y_cor - 2, board, possibleMoves);
+		generateOneMove(this.x_cor + 2, this.y_cor - 1, board, possibleMoves);
+		generateOneMove(this.x_cor - 1, this.y_cor + 2, board, possibleMoves);
+		generateOneMove(this.x_cor - 2, this.y_cor + 1, board, possibleMoves);
+		generateOneMove(this.x_cor - 1, this.y_cor - 2, board, possibleMoves);
+		generateOneMove(this.x_cor - 2, this.y_cor - 1, board, possibleMoves);
+		return possibleMoves;
+	}
+	
+	private void generateOneMove(int target_x, int target_y, Board board, LinkedList<Move> possibleMoves) {
+		if(!validCor(target_x, target_y)) { // check isValid Coordinates
+			return;
+		}
+		if(board.getPlayerSide(target_x, target_y) == this.side) { // check if ally piece 
+			return;
+		}
+		possibleMoves.add(new Move(this.x_cor, this.y_cor, target_x, target_y));
 	}
 	
 	@Override

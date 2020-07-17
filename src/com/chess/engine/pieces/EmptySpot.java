@@ -25,11 +25,6 @@ public class EmptySpot extends Piece {
 	}
 
 	@Override
-	public boolean isLegalMove(Move move) {
-		return false;
-	}
-
-	@Override
 	public boolean isAttacking(final Board board, int target_x_cor, int target_y_cor) {
 		return false;
 	}

@@ -23,14 +23,6 @@ public class Bishop extends Bishop_Rook_Queen{
 		return PieceType.Bishop;
 	}
 	
-	@Override
-	public boolean isLegalMove(Move move) {
-		int start_x = move.getStart_x();
-		int start_y = move.getStart_y();
-		int end_x = move.getEnd_x();
-		int end_y = move.getEnd_y();
-		return (end_x - start_x == end_y - start_y);
-	}
 	
 	@Override
 	public boolean isAttacking(final Board board, int target_x_cor, int target_y_cor) {

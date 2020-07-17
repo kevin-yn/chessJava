@@ -24,7 +24,6 @@ public class Board {
 	//final private LinkedList<Move> allLegalMoves = new LinkedList<>();
 	private PlayerSide currSide;
 	
-	
 	public Board() {
 		super();
 		initializeBoard();
@@ -69,11 +68,19 @@ public class Board {
 	 */
 	private void setInitialPositions_Pawns(int y, PlayerSide side) {
 		for(int x = 0; x < 8; x++) {
-			int index = BoardUtils.getIndex(x, y);
+			int index = getIndex(x, y);
 			Piece newPiece = new Pawn(side, index);
 			boardPiecesArray[index] = newPiece;
 			addPiece(newPiece);
 		}
+	}
+
+	/**
+	 * Add a piece from its piece list
+	 */
+	private void addPiece(Piece pieceToAdd) {
+		ArrayList<Piece> list = (pieceToAdd.getSide() == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
+		list.add(pieceToAdd);
 	}
 	
 	/**
@@ -82,12 +89,12 @@ public class Board {
 	 * @param side
 	 */
 	private void setInitialPositions_Others(int y, PlayerSide side) {
-		int index = BoardUtils.getIndex(0, y);
+		int index = getIndex(0, y);
 		boardPiecesArray[index + 0] = new Rook(side, index + 0); // Rook
 		boardPiecesArray[index + 1] = new Knight(side, index + 1); // Knight
 		boardPiecesArray[index + 2] = new Bishop(side, index + 2); // Bishop
-		boardPiecesArray[index + 3] = new King(side, index + 3); // King
-		boardPiecesArray[index + 4] = new Queen(side, index + 4); // Queen
+		boardPiecesArray[index + 3] = new Queen(side, index + 3); // King
+		boardPiecesArray[index + 4] = new King(side, index + 4); // Queen
 		boardPiecesArray[index + 5] = new Bishop(side, index + 5); // Bishop
 		boardPiecesArray[index + 6] = new Knight(side, index + 6); // Knight
 		boardPiecesArray[index + 7] = new Rook(side, index + 7); // Rook
@@ -103,11 +110,10 @@ public class Board {
 	 */
 	private void setInitialPositions_Empties(final int y) {
 		for(int x = 0; x < 8; x++) {
-			int index = BoardUtils.getIndex(x, y);
+			int index = getIndex(x, y);
 			boardPiecesArray[index] = new EmptySpot(index);
 		}
 	}
-	
 	
 	/**
 	 * Add a move to moveHistorieStack
@@ -128,7 +134,6 @@ public class Board {
 	public Move getLastMove() {
 		return moveHistorieStack.peek();
 	}
-	
 	
 	/**
 	 * check whether a move is legal, this assumes that the currSide is current!
@@ -203,8 +208,9 @@ public class Board {
 	
 	/**
 	 * Execute a move without saving the move the movehistoryStack
+	 * @return the piece moved
 	 */
-	public void executeMoveWithOutUpdatingHistory(Move move) {
+	public Piece executeMoveWithOutUpdatingHistory(Move move) {
 		int endIndex = move.getEndIndex();
 		int startIndex = move.getStartIndex();
 		Piece capturedPiece = boardPiecesArray[endIndex]; // get capturedPiece
@@ -212,19 +218,43 @@ public class Board {
 		boolean original_status_debug = capturedPiece.setDead(); // set capturedPiece as dead
 		if(!original_status_debug) { // DEBUG!!!
 			System.err.println("executeMoveWithOutUpdating ERROR");
-			return;
+			return null;
 		}
 		Piece movedPiece = boardPiecesArray[startIndex]; // get movedPiece
-		movedPiece.setCor(move.getEnd_x(), move.getEnd_y()); // update movedPiece position
+		movedPiece.moveTo(move.getEnd_x(), move.getEnd_y()); // update movedPiece position and moveCount
 		// update Board Array
 		boardPiecesArray[startIndex] = new EmptySpot(startIndex);
 		boardPiecesArray[endIndex] = movedPiece;
+		
+		
+		// special Castling move
+		if(move.isCastling()) {
+			if(move.getEnd_x() < move.getStart_x()) { // left side castling
+				Piece rookPiece = (movedPiece.getSide() == PlayerSide.White) ? boardPiecesArray[56] : boardPiecesArray[0];
+				rookPiece.moveTo(3, movedPiece.getY_cor());
+				boardPiecesArray[3 + movedPiece.getY_cor() * 8] = rookPiece;
+				boardPiecesArray[movedPiece.getY_cor() * 8] = new EmptySpot(movedPiece.getY_cor() * 8);
+			} else { // right side castling
+				Piece rookPiece = (movedPiece.getSide() == PlayerSide.White) ? boardPiecesArray[63] : boardPiecesArray[7];
+				rookPiece.moveTo(5, movedPiece.getY_cor());
+				boardPiecesArray[5 + movedPiece.getY_cor() * 8] = rookPiece;
+				boardPiecesArray[7 + movedPiece.getY_cor() * 8] = new EmptySpot(7 + movedPiece.getY_cor() * 8);
+			}
+		} else if(move.isEnPassant()) {
+			int captured_cor = move.getEnd_x() + move.getStart_y() * 8;
+			Piece capturedPawn = boardPiecesArray[captured_cor];
+			capturedPawn.setDead();
+			move.setCaptured_piece(capturedPawn);
+			boardPiecesArray[captured_cor] = new EmptySpot(captured_cor);
+		}
+		return movedPiece;
 	}
 
-	/** TODO
-	 * Undo a move without updating the @alive of Piece
+	/** 
+	 * Undo a move without poping the movehistoryStack
+	 * @return the piece moved
 	 */
-	public void undoMoveWithOutUpdatingHistory(Move move) {
+	public Piece undoMoveWithOutUpdatingHistory(Move move) {
 		int endIndex = move.getEndIndex();
 		int startIndex = move.getStartIndex();
 		Piece capturedPiece = move.getCaptured_piece();
@@ -234,32 +264,54 @@ public class Board {
 			System.err.println("undoMoveWithOutUpdating ERROR");
 		}
 		Piece movedPiece = boardPiecesArray[endIndex];
-		movedPiece.setCor(move.getStart_x(), move.getStart_y());
+		movedPiece.returnTo(move.getStart_x(), move.getStart_y());
 		// update Board Array
 		boardPiecesArray[startIndex] = movedPiece;
 		boardPiecesArray[endIndex] = capturedPiece;
+		
+		// speical Castling move
+		if(move.isCastling()) {
+			System.out.println("executing castling");
+			if(move.getEnd_x() < move.getStart_x()) { // left side castling
+				Piece rookPiece = (movedPiece.getSide() == PlayerSide.White) ? boardPiecesArray[58] : boardPiecesArray[2];
+				rookPiece.moveTo(0, movedPiece.getY_cor());
+				boardPiecesArray[0 + movedPiece.getY_cor() * 8] = rookPiece;
+				boardPiecesArray[3 + movedPiece.getY_cor() * 8] = new EmptySpot(movedPiece.getY_cor() * 8);
+			} else { // right side castling
+				Piece rookPiece = (movedPiece.getSide() == PlayerSide.White) ? boardPiecesArray[60] : boardPiecesArray[4];
+				rookPiece.moveTo(7, movedPiece.getY_cor());
+				boardPiecesArray[7 + movedPiece.getY_cor() * 8] = rookPiece;
+				boardPiecesArray[5 + movedPiece.getY_cor() * 8] = new EmptySpot(movedPiece.getY_cor() * 8);
+			}
+		} else if(move.isEnPassant()) {
+			int captured_cor = move.getEnd_x() + move.getStart_y() * 8;
+			Piece capturedPawn = move.getCaptured_piece();
+			capturedPawn.setAlive();
+			boardPiecesArray[captured_cor] = capturedPawn;
+		}
+		return movedPiece;
 	}
 	
-	/** TODO
+	/** 
 	 * Execute a move
 	 * updating the moveHistorieStack AND CURR_SIDE
 	 */
 	public void executeMoveComplete(Move move) {
-		executeMoveWithOutUpdatingHistory(move);
+		Piece movedPiece = executeMoveWithOutUpdatingHistory(move);
 		addMoveToHistory(move);
 		changeSide();
 	}
 
-	/** TODO
+	/**
 	 * Undo the last move only
-	 * updating the moveHistorieStack
+	 * updating the moveHistorieStack and CURR_SIDE
 	 */
 	public void undoMoveComplete() {
-		undoMoveWithOutUpdatingHistory(removeLastMove());
+		Piece movedPiece = undoMoveWithOutUpdatingHistory(removeLastMove());
 		changeSide();
 	}
 
-	/** TODO
+	/** 
 	 * handle Pawn Promotion
 	 */
 	public void pawnPromotionHandler() {
@@ -274,10 +326,24 @@ public class Board {
 	}
 	
 	/**
-	 * check whether the board is empty at input coordiante
+	 * return the PlayerSide of the piece at input coordinate
+	 */
+	public PlayerSide getPlayerSide(int index) {
+		return boardPiecesArray[index].getSide();
+	}
+	
+	/**
+	 * check whether the board is empty at input coordinate
 	 */
 	public boolean isEmptyAt(int x_cor, int y_cor) {
 		return boardPiecesArray[x_cor + y_cor * 8].isEmpty();
+	}
+	
+	/**
+	 * check whether the board is empty at input index
+	 */
+	public boolean isEmptyAt(int index) {
+		return boardPiecesArray[index].isEmpty();
 	}
 	
 	/**
@@ -287,6 +353,115 @@ public class Board {
 		return boardPiecesArray[x_cor + y_cor * 8];
 	}
 	
+	/**
+	 * get the piece at input coordinate
+	 */
+	public Piece getPiece(int index) {
+		return boardPiecesArray[index];
+	}
+	
+	/**
+	 * Check whether it is legal to perform Castling for side
+	 */
+	public boolean isCastlingLegal(PlayerSide side, boolean leftSide) {
+		/**
+		 * Castling
+		 * 1. King and Rook is not moved yet
+		 * 2. All space in between is empty
+		 * 3. King's whole path is not under attack
+		 */
+		// TODO
+		
+		// 1. check King is unmoved
+		Piece kingPiece = (side == PlayerSide.White) ? whiteKingPiece: blackKingPiece;
+		if(kingPiece.isMoved()) {
+			return false;
+		}
+		// 1. check rook is unmoved
+		Piece rookPiece;
+		if(leftSide) {
+			rookPiece = (side == PlayerSide.White) ? boardPiecesArray[56] : boardPiecesArray[0];
+		} else {
+			rookPiece = (side == PlayerSide.White) ? boardPiecesArray[63] : boardPiecesArray[7];
+		}
+		if(rookPiece.isMoved()) {
+			return false;
+		}
+		
+		// 2. check all space is empty
+		int y = (side == PlayerSide.White) ? 7 : 0;
+		if(leftSide) {
+			for(int x = 1; x <= 3; x++) {
+				if(!boardPiecesArray[x + y * 8].isEmpty()) {
+					return false;
+				}
+			}
+		} else {
+			for(int x = 5; x <= 6; x++) {
+				if(!boardPiecesArray[x + y * 8].isEmpty()) {
+					return false;
+				}
+			}
+		}
+
+		// 3. check the route is safe
+		PlayerSide attackingSide = Piece.getOppositeSide(side);
+		if(leftSide) {
+			for(int x = 2; x <= 3; x++) {
+				if(isUnderattack(attackingSide, x, y)) {
+					return false;
+				}
+			}
+		} else {
+			for(int x = 5; x <= 6; x++) {
+				if(isUnderattack(attackingSide, x, y)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	private int getIndex(int x, int y) {
+		return x + y * 8;
+	}
+	
+	
+	/**
+	 * make a move function used by the GUI or (Player)
+	 * @param move
+	 * @return whether the move is legal and successfully executed
+	 */
+	public boolean makeAMove(Move move) {
+		// check whether move is legal
+			// check whether the moved piece belongs to the currSide
+		Piece movedPiece = boardPiecesArray[move.getStartIndex()];
+		if(movedPiece.getSide() != currSide) {
+			return false;
+		}
+			// check whether this move belongs to the list of possible moves generated by this piece
+		boolean found = false;
+		LinkedList<Move> possibleMoves = movedPiece.generatePossibleMoves(this);
+		if(possibleMoves == null) {
+			System.err.println("possibleMoves is Null");
+			return false;
+		}
+		for(Move currMove: possibleMoves) {
+			if(currMove.getEndIndex() == move.getEndIndex() && currMove.getStartIndex() == move.getStartIndex()) {
+				found = true;
+				move = currMove;
+				break;
+			}
+		}
+		if(!found) {
+			return false;
+		}
+		
+		// execute the move complete
+		executeMoveComplete(move);
+		printBoard();
+		return true;
+	}
 	// ==================================================================================================================
 	// 											DEBUG FUNCTIONS
 	// ==================================================================================================================
@@ -342,28 +517,5 @@ public class Board {
 			}
 		}
 		return correct;
-	}
-	
-	// ==================================================================================================================
-	// 											USELESS FUNCTIONS
-	// ==================================================================================================================
-	
-	
-	
-	
-	/**
-	 * Remove a piece from its piece list
-	 */
-	private void removePiece(Piece pieceToRemove) {
-		ArrayList<Piece> list = (pieceToRemove.getSide() == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
-		list.remove(pieceToRemove);
-	}
-	
-	/**
-	 * Add a piece from its piece list
-	 */
-	private void addPiece(Piece pieceToAdd) {
-		ArrayList<Piece> list = (pieceToAdd.getSide() == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
-		list.add(pieceToAdd);
 	}
 }

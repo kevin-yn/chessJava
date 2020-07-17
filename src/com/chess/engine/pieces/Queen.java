@@ -25,12 +25,6 @@ public class Queen extends Bishop_Rook_Queen {
 	}
 
 	@Override
-	public boolean isLegalMove(Move move) {
-		
-		return false;
-	}
-
-	@Override
 	public boolean isAttacking(final Board board, int target_x_cor, int target_y_cor) {
 		boolean same_x = (this.x_cor == target_x_cor);
 		boolean same_y = (this.y_cor == target_y_cor);
