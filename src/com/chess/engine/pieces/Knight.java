@@ -1,13 +1,9 @@
 package com.chess.engine.pieces;
 
+import java.util.LinkedList;
+
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
-import com.chess.engine.pieces.Piece.PieceType;
-import com.chess.engine.pieces.Piece.PlayerSide;
-
-import java.lang.Math;
-import java.util.ArrayList;
-import java.util.LinkedList;
 
 public class Knight extends Piece {
 

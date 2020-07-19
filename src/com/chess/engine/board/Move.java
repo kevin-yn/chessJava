@@ -12,8 +12,18 @@ public class Move {
 	// special move flag
 	private boolean isCastling;
 	private boolean isEnPassant;
+	private boolean isPawnPromotion;
 	
 	
+	
+	public boolean isPawnPromotion() {
+		return isPawnPromotion;
+	}
+
+	public void setPawnPromotion() {
+		this.isPawnPromotion = true;
+	}
+
 	public boolean isEnPassant() {
 		return isEnPassant;
 	}
@@ -90,6 +100,7 @@ public class Move {
 		}
 		isCastling = false;
 		isEnPassant = false;
+		isPawnPromotion = false;
 	}
 	
 	public Move(int sou_index, int des_index) {
@@ -104,5 +115,6 @@ public class Move {
 		}
 		isCastling = false;
 		isEnPassant = false;
+		isPawnPromotion = false;
 	}
 }

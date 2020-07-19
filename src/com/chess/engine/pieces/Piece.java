@@ -1,6 +1,5 @@
 package com.chess.engine.pieces;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 import com.chess.engine.board.Board;

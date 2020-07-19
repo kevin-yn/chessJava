@@ -1,12 +1,9 @@
 package com.chess.engine.pieces;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
-import com.chess.engine.pieces.Piece.PieceType;
-import com.chess.engine.pieces.Piece.PlayerSide;
 
 public class Pawn extends Piece {
 	/**
@@ -60,7 +57,12 @@ public class Pawn extends Piece {
 		boolean oneStepAheadEmpty = false;
 		if(validCor(this.x_cor, this.y_cor + direction) && board.isEmptyAt(this.x_cor, this.y_cor + direction)) {
 			oneStepAheadEmpty = true;
-			possibleMoves.add(new Move(this.x_cor, this.y_cor, this.x_cor, this.y_cor + direction));
+			Move newMove = new Move(this.x_cor, this.y_cor, this.x_cor, this.y_cor + direction);
+			// check if Pawn Promotion
+			if(newMove.getEnd_y() == (this.side == PlayerSide.White ? 0 : 7)) {
+				newMove.setPawnPromotion();
+			}
+			possibleMoves.add(newMove);
 		}
 		// initial two steps ahead
 		if(moveCount == 0 && oneStepAheadEmpty && validCor(this.x_cor, this.y_cor + 2 * direction) && board.isEmptyAt(this.x_cor, this.y_cor + 2 * direction)) {
@@ -69,10 +71,20 @@ public class Pawn extends Piece {
 		
 		// normal capture move
 		if(validCor(this.x_cor + 1, this.y_cor + direction) && board.getPlayerSide(this.x_cor + 1, this.y_cor + direction) == getOppositeSide(side)) {
-			possibleMoves.add(new Move(this.x_cor, this.y_cor, this.x_cor + 1, this.y_cor + direction));
+			Move newMove = new Move(this.x_cor, this.y_cor, this.x_cor + 1, this.y_cor + direction);
+			// check if Pawn Promotion
+			if(newMove.getEnd_y() == (this.side == PlayerSide.White ? 0 : 7)) {
+				newMove.setPawnPromotion();
+			}
+			possibleMoves.add(newMove);
 		}
 		if(validCor(this.x_cor - 1, this.y_cor + direction) && board.getPlayerSide(this.x_cor - 1, this.y_cor + direction) == getOppositeSide(side)) {
-			possibleMoves.add(new Move(this.x_cor, this.y_cor, this.x_cor - 1, this.y_cor + direction));
+			Move newMove = new Move(this.x_cor, this.y_cor, this.x_cor - 1, this.y_cor + direction);
+			// check if Pawn Promotion
+			if(newMove.getEnd_y() == (this.side == PlayerSide.White ? 0 : 7)) {
+				newMove.setPawnPromotion();
+			}
+			possibleMoves.add(newMove);
 		}
 		
 		// en Passnat move TODOTODO!!!!!!!!!

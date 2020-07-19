@@ -1,44 +1,40 @@
 package com.chess.engine.board;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Stack;
+
+import com.chess.engine.pieces.Bishop;
+import com.chess.engine.pieces.EmptySpot;
+import com.chess.engine.pieces.King;
+import com.chess.engine.pieces.Knight;
+import com.chess.engine.pieces.Pawn;
 import com.chess.engine.pieces.Piece;
 import com.chess.engine.pieces.Piece.PlayerSide;
-import com.chess.engine.pieces.Piece.PieceType;
-import com.chess.engine.pieces.Knight;
-import com.chess.engine.pieces.Rook;
-import com.chess.engine.pieces.Bishop;
-import com.chess.engine.pieces.King;
 import com.chess.engine.pieces.Queen;
-import com.chess.engine.pieces.Pawn;
-import com.chess.engine.pieces.EmptySpot;
-
-import java.util.*;
+import com.chess.engine.pieces.Rook;
 
 
 public class Board {
 	final public Piece[] boardPiecesArray = new Piece[64];
 	final private ArrayList<Piece> whitePiecesArrayList = new ArrayList<Piece>(16);
 	final private ArrayList<Piece> blackPiecesArrayList = new ArrayList<Piece>(16);
+	final private Stack<Move> moveHistorieStack = new Stack<Move>();
 	private Piece whiteKingPiece;
 	private Piece blackKingPiece;
-	final private Stack<Move> moveHistorieStack = new Stack<Move>();
-	//final private LinkedList<Move> allLegalMoves = new LinkedList<>();
 	private PlayerSide currSide;
+	private GameState gameState;
 	
 	public Board() {
 		super();
 		initializeBoard();
+		whiteKingPiece = boardPiecesArray[60];
+		blackKingPiece = boardPiecesArray[4];
+		currSide = PlayerSide.White;
+		gameState = GameState.Active;
 	}
 
-	/**
-	 * Initialize the Board, the piecesArrayList
-	 */
-	private void initializeBoard() {
-		setInitialPositions();
-		whiteKingPiece = boardPiecesArray[59];
-		blackKingPiece = boardPiecesArray[3];
-		currSide = PlayerSide.White;
-	}
-	
+
 	/**
 	 * switch the currSide (the player to make the next move)
 	 */
@@ -47,9 +43,9 @@ public class Board {
 	}
 	
 	/**
-	 * dispatch function to set all initial positions
+	 * Set all initial positions and add them to piecesArrayList
 	 */
-	private void setInitialPositions() {
+	private void initializeBoard() {
 		setInitialPositions_Others(0, PlayerSide.Black);
 		setInitialPositions_Pawns(1, PlayerSide.Black);
 		setInitialPositions_Empties(2);
@@ -128,8 +124,9 @@ public class Board {
 	private Move removeLastMove() {
 		return moveHistorieStack.pop();
 	}
+	
 	/**
-	 * Get the last move made
+	* Get the last move made
 	 */
 	public Move getLastMove() {
 		return moveHistorieStack.peek();
@@ -166,17 +163,33 @@ public class Board {
 		// use selectLegalMoves to add only legal ones
 		LinkedList<Move> legalMovesList = new LinkedList<>();
 		ArrayList<Piece> picesList = (currSide == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
-		for(Piece currPiece : picesList) {
+		for(int i = 0; i < picesList.size(); i++) {
+			Piece currPiece = picesList.get(i);
 			selectLegalMoves(currPiece.generatePossibleMoves(this), legalMovesList);
 		}
 		return legalMovesList;
+	}
+	
+	/**
+	 * check whether the game has ended
+	 */
+	public GameState checkGameState() {
+		LinkedList<Move> legalMoves = compileAllLegalMoves();
+		if(legalMoves.isEmpty()) {
+			if(isCheckMated(currSide)) {
+				gameState = currSide == PlayerSide.White ? GameState.BlackWin : GameState.WhiteWin;
+			} else {
+				gameState = GameState.Draw;
+			}
+		}
+		return gameState;
 	}
 
 	/** 
 	 * Checks whether a spot is under attack by one side
 	 * @ineffectivePiece is one Piece that can not attack at this moment
 	 */
-	public boolean isUnderattack(PlayerSide attackingSide, int x_cor, int y_cor) {
+	private boolean isUnderattack(PlayerSide attackingSide, int x_cor, int y_cor) {
 		ArrayList<Piece> list = (attackingSide == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
 		for(Piece piece : list) {
 			if(piece.isAlive() && piece.isAttacking(this, x_cor, y_cor)) {
@@ -190,7 +203,7 @@ public class Board {
 	 * Checks whether a side is being checkmated
 	 * When this function is used while checking legal moves, capturedPiece is the piece that is already captured but still exists in the pieceList
 	 */
-	public boolean isCheckMated(PlayerSide defendingSide) {
+	private boolean isCheckMated(PlayerSide defendingSide) {
 		PlayerSide attackingSide;
 		int x_cor;
 		int y_cor;
@@ -246,6 +259,10 @@ public class Board {
 			capturedPawn.setDead();
 			move.setCaptured_piece(capturedPawn);
 			boardPiecesArray[captured_cor] = new EmptySpot(captured_cor);
+		} else if(move.isPawnPromotion() ) {
+			Piece newPiece = new Queen(movedPiece.getSide(), movedPiece.getIndex());
+			replacePiece(movedPiece, newPiece);
+			movedPiece = newPiece;
 		}
 		return movedPiece;
 	}
@@ -288,26 +305,46 @@ public class Board {
 			Piece capturedPawn = move.getCaptured_piece();
 			capturedPawn.setAlive();
 			boardPiecesArray[captured_cor] = capturedPawn;
+		} else if(move.isPawnPromotion()) {
+			Piece oldPawnPiece = new Pawn(movedPiece.getSide(), movedPiece.getIndex());
+			replacePiece(movedPiece, oldPawnPiece);
 		}
 		return movedPiece;
 	}
 	
 	/** 
 	 * Execute a move
-	 * updating the moveHistorieStack AND CURR_SIDE
+	 * updating the moveHistorieStack AND CURR_SIDE and GameState
 	 */
 	public void executeMoveComplete(Move move) {
-		Piece movedPiece = executeMoveWithOutUpdatingHistory(move);
+		executeMoveWithOutUpdatingHistory(move);
 		addMoveToHistory(move);
 		changeSide();
+		checkGameState();
 	}
+
+	private void replacePiece(Piece oldPiece, Piece newPiece) {
+		ArrayList<Piece> arrayList = oldPiece.getSide() == PlayerSide.White ? whitePiecesArrayList : blackPiecesArrayList;
+		int index = arrayList.indexOf(oldPiece);
+		arrayList.set(index, newPiece);
+		boardPiecesArray[oldPiece.getIndex()] = newPiece;
+	}
+	
+	
+	public GameState getGameState() {
+		return gameState;
+	}
+
+
+
+
 
 	/**
 	 * Undo the last move only
 	 * updating the moveHistorieStack and CURR_SIDE
 	 */
 	public void undoMoveComplete() {
-		Piece movedPiece = undoMoveWithOutUpdatingHistory(removeLastMove());
+		undoMoveWithOutUpdatingHistory(removeLastMove());
 		changeSide();
 	}
 
@@ -370,7 +407,6 @@ public class Board {
 		 * 2. All space in between is empty
 		 * 3. King's whole path is not under attack
 		 */
-		// TODO
 		
 		// 1. check King is unmoved
 		Piece kingPiece = (side == PlayerSide.White) ? whiteKingPiece: blackKingPiece;
@@ -409,23 +445,30 @@ public class Board {
 		if(leftSide) {
 			for(int x = 2; x <= 3; x++) {
 				if(isUnderattack(attackingSide, x, y)) {
+					System.out.println("not safe");
+					System.out.println(x);
 					return false;
 				}
 			}
 		} else {
 			for(int x = 5; x <= 6; x++) {
 				if(isUnderattack(attackingSide, x, y)) {
+					System.out.println("not safe");
+					System.out.println(x);
 					return false;
 				}
 			}
 		}
 		return true;
 	}
-	
+ 	
 	private int getIndex(int x, int y) {
 		return x + y * 8;
 	}
 	
+	public String getCurrentSideString() {
+		return currSide == PlayerSide.White ? "White" : "Black";
+	}
 	
 	/**
 	 * make a move function used by the GUI or (Player)
@@ -456,12 +499,16 @@ public class Board {
 		if(!found) {
 			return false;
 		}
-		
+			// check whether this move is legal (based on checkmate)
+		if(!isLegalMove(move)) {
+			return false;
+		}
 		// execute the move complete
 		executeMoveComplete(move);
 		printBoard();
 		return true;
 	}
+	
 	// ==================================================================================================================
 	// 											DEBUG FUNCTIONS
 	// ==================================================================================================================
@@ -517,5 +564,12 @@ public class Board {
 			}
 		}
 		return correct;
+	}
+	
+	public enum GameState {
+		Active,
+		WhiteWin,
+		BlackWin,
+		Draw
 	}
 }
