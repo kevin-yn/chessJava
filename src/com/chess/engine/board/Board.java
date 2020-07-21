@@ -118,20 +118,7 @@ public class Board {
 		moveHistorieStack.push(move);
 	}
 	
-	/**
-	 * @return the Removed last move made
-	 */
-	private Move removeLastMove() {
-		return moveHistorieStack.pop();
-	}
-	
-	/**
-	* Get the last move made
-	 */
-	public Move getLastMove() {
-		return moveHistorieStack.peek();
-	}
-	
+
 	/**
 	 * check whether a move is legal, this assumes that the currSide is current!
 	 */
@@ -140,6 +127,62 @@ public class Board {
 		boolean isCheckMate = isCheckMated(currSide);
 		undoMoveWithOutUpdatingHistory(move);
 		return !isCheckMate; // if checkMated, then illegal
+	}
+	
+	public void replacePiece(Piece oldPiece, Piece newPiece) {
+		if(oldPiece == newPiece || newPiece == null) {
+			return;
+		}
+		ArrayList<Piece> arrayList = oldPiece.getSide() == PlayerSide.White ? whitePiecesArrayList : blackPiecesArrayList;
+		int index = arrayList.indexOf(oldPiece);
+		arrayList.set(index, newPiece);
+		boardPiecesArray[oldPiece.getIndex()] = newPiece;
+	}
+
+
+	/** 
+	 * Checks whether a spot is under attack by one side
+	 * @ineffectivePiece is one Piece that can not attack at this moment
+	 */
+	private boolean isUnderattack(PlayerSide attackingSide, int x_cor, int y_cor) {
+		ArrayList<Piece> list = (attackingSide == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
+		for(Piece piece : list) {
+			if(piece.isAlive() && piece.isAttacking(this, x_cor, y_cor)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	/**
+	 * Checks whether a side is being checkmated
+	 * When this function is used while checking legal moves, capturedPiece is the piece that is already captured but still exists in the pieceList
+	 */
+	private boolean isCheckMated(PlayerSide defendingSide) {
+		PlayerSide attackingSide;
+		int x_cor;
+		int y_cor;
+		if(defendingSide == PlayerSide.White) {
+			attackingSide = PlayerSide.Black;
+			x_cor = whiteKingPiece.getX_cor();
+			y_cor = whiteKingPiece.getY_cor();
+		} else {
+			attackingSide = PlayerSide.White;
+			x_cor = blackKingPiece.getX_cor();
+			y_cor = blackKingPiece.getY_cor();
+		}
+		return isUnderattack(attackingSide, x_cor, y_cor);
+	}
+
+
+	private int getIndex(int x, int y) {
+		return x + y * 8;
+	}
+
+
+	public Move getLastMove() {
+		return moveHistorieStack.peek();
 	}
 	
 	/**
@@ -185,40 +228,6 @@ public class Board {
 		return gameState;
 	}
 
-	/** 
-	 * Checks whether a spot is under attack by one side
-	 * @ineffectivePiece is one Piece that can not attack at this moment
-	 */
-	private boolean isUnderattack(PlayerSide attackingSide, int x_cor, int y_cor) {
-		ArrayList<Piece> list = (attackingSide == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
-		for(Piece piece : list) {
-			if(piece.isAlive() && piece.isAttacking(this, x_cor, y_cor)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Checks whether a side is being checkmated
-	 * When this function is used while checking legal moves, capturedPiece is the piece that is already captured but still exists in the pieceList
-	 */
-	private boolean isCheckMated(PlayerSide defendingSide) {
-		PlayerSide attackingSide;
-		int x_cor;
-		int y_cor;
-		if(defendingSide == PlayerSide.White) {
-			attackingSide = PlayerSide.Black;
-			x_cor = whiteKingPiece.getX_cor();
-			y_cor = whiteKingPiece.getY_cor();
-		} else {
-			attackingSide = PlayerSide.White;
-			x_cor = blackKingPiece.getX_cor();
-			y_cor = blackKingPiece.getY_cor();
-		}
-		return isUnderattack(attackingSide, x_cor, y_cor);
-	}
-	
 	/**
 	 * Execute a move without saving the move the movehistoryStack
 	 * @return the piece moved
@@ -260,9 +269,9 @@ public class Board {
 			move.setCaptured_piece(capturedPawn);
 			boardPiecesArray[captured_cor] = new EmptySpot(captured_cor);
 		} else if(move.isPawnPromotion() ) {
-			Piece newPiece = new Queen(movedPiece.getSide(), movedPiece.getIndex());
-			replacePiece(movedPiece, newPiece);
-			movedPiece = newPiece;
+//			Piece newPiece = new Queen(movedPiece.getSide(), movedPiece.getIndex());
+//			replacePiece(movedPiece, newPiece);
+//			movedPiece = newPiece;
 		}
 		return movedPiece;
 	}
@@ -275,28 +284,36 @@ public class Board {
 		int endIndex = move.getEndIndex();
 		int startIndex = move.getStartIndex();
 		Piece capturedPiece = move.getCaptured_piece();
+
+		
 		boolean original_status_debug = capturedPiece.setAlive(); // set capturedPiece as dead
 		// DEBUG
-		if(original_status_debug || move.getEnd_x() != capturedPiece.getX_cor() || move.getEnd_y() != capturedPiece.getY_cor()) {
+		if(original_status_debug) {
 			System.err.println("undoMoveWithOutUpdating ERROR");
+			System.err.println(move.getStartIndex());
+			System.err.println(move.getEndIndex());
 		}
 		Piece movedPiece = boardPiecesArray[endIndex];
 		movedPiece.returnTo(move.getStart_x(), move.getStart_y());
 		// update Board Array
 		boardPiecesArray[startIndex] = movedPiece;
-		boardPiecesArray[endIndex] = capturedPiece;
+		if(move.isEnPassant()) {
+			boardPiecesArray[endIndex] = new EmptySpot(endIndex);
+		} else {
+			boardPiecesArray[endIndex] = capturedPiece;
+		}
 		
 		// speical Castling move
 		if(move.isCastling()) {
 			System.out.println("executing castling");
 			if(move.getEnd_x() < move.getStart_x()) { // left side castling
-				Piece rookPiece = (movedPiece.getSide() == PlayerSide.White) ? boardPiecesArray[58] : boardPiecesArray[2];
-				rookPiece.moveTo(0, movedPiece.getY_cor());
+				Piece rookPiece = (movedPiece.getSide() == PlayerSide.White) ? boardPiecesArray[59] : boardPiecesArray[3];
+				rookPiece.returnTo(0, movedPiece.getY_cor());
 				boardPiecesArray[0 + movedPiece.getY_cor() * 8] = rookPiece;
 				boardPiecesArray[3 + movedPiece.getY_cor() * 8] = new EmptySpot(movedPiece.getY_cor() * 8);
 			} else { // right side castling
-				Piece rookPiece = (movedPiece.getSide() == PlayerSide.White) ? boardPiecesArray[60] : boardPiecesArray[4];
-				rookPiece.moveTo(7, movedPiece.getY_cor());
+				Piece rookPiece = (movedPiece.getSide() == PlayerSide.White) ? boardPiecesArray[61] : boardPiecesArray[5];
+				rookPiece.returnTo(7, movedPiece.getY_cor());
 				boardPiecesArray[7 + movedPiece.getY_cor() * 8] = rookPiece;
 				boardPiecesArray[5 + movedPiece.getY_cor() * 8] = new EmptySpot(movedPiece.getY_cor() * 8);
 			}
@@ -323,28 +340,16 @@ public class Board {
 		checkGameState();
 	}
 
-	private void replacePiece(Piece oldPiece, Piece newPiece) {
-		ArrayList<Piece> arrayList = oldPiece.getSide() == PlayerSide.White ? whitePiecesArrayList : blackPiecesArrayList;
-		int index = arrayList.indexOf(oldPiece);
-		arrayList.set(index, newPiece);
-		boardPiecesArray[oldPiece.getIndex()] = newPiece;
-	}
-	
-	
 	public GameState getGameState() {
 		return gameState;
 	}
-
-
-
-
 
 	/**
 	 * Undo the last move only
 	 * updating the moveHistorieStack and CURR_SIDE
 	 */
 	public void undoMoveComplete() {
-		undoMoveWithOutUpdatingHistory(removeLastMove());
+		undoMoveWithOutUpdatingHistory(moveHistorieStack.pop());
 		changeSide();
 	}
 
@@ -401,6 +406,7 @@ public class Board {
 	 * Check whether it is legal to perform Castling for side
 	 */
 	public boolean isCastlingLegal(PlayerSide side, boolean leftSide) {
+		System.out.println(side);
 		/**
 		 * Castling
 		 * 1. King and Rook is not moved yet
@@ -411,6 +417,7 @@ public class Board {
 		// 1. check King is unmoved
 		Piece kingPiece = (side == PlayerSide.White) ? whiteKingPiece: blackKingPiece;
 		if(kingPiece.isMoved()) {
+			System.out.println("king piece moved");
 			return false;
 		}
 		// 1. check rook is unmoved
@@ -421,6 +428,7 @@ public class Board {
 			rookPiece = (side == PlayerSide.White) ? boardPiecesArray[63] : boardPiecesArray[7];
 		}
 		if(rookPiece.isMoved()) {
+			System.out.println("rook piece moved");
 			return false;
 		}
 		
@@ -429,12 +437,16 @@ public class Board {
 		if(leftSide) {
 			for(int x = 1; x <= 3; x++) {
 				if(!boardPiecesArray[x + y * 8].isEmpty()) {
+					System.out.println("blocked");
+					System.out.println(x);
 					return false;
 				}
 			}
 		} else {
 			for(int x = 5; x <= 6; x++) {
 				if(!boardPiecesArray[x + y * 8].isEmpty()) {
+					System.out.println("blocked");
+					System.out.println(x);
 					return false;
 				}
 			}
@@ -462,32 +474,28 @@ public class Board {
 		return true;
 	}
  	
-	private int getIndex(int x, int y) {
-		return x + y * 8;
-	}
-	
 	public String getCurrentSideString() {
 		return currSide == PlayerSide.White ? "White" : "Black";
 	}
 	
 	/**
-	 * make a move function used by the GUI or (Player)
+	 * make a move function used by the GUI
 	 * @param move
 	 * @return whether the move is legal and successfully executed
 	 */
-	public boolean makeAMove(Move move) {
+	public Move makeAMove(Move move) {
 		// check whether move is legal
 			// check whether the moved piece belongs to the currSide
 		Piece movedPiece = boardPiecesArray[move.getStartIndex()];
 		if(movedPiece.getSide() != currSide) {
-			return false;
+			return null;
 		}
 			// check whether this move belongs to the list of possible moves generated by this piece
 		boolean found = false;
 		LinkedList<Move> possibleMoves = movedPiece.generatePossibleMoves(this);
 		if(possibleMoves == null) {
 			System.err.println("possibleMoves is Null");
-			return false;
+			return null;
 		}
 		for(Move currMove: possibleMoves) {
 			if(currMove.getEndIndex() == move.getEndIndex() && currMove.getStartIndex() == move.getStartIndex()) {
@@ -497,15 +505,26 @@ public class Board {
 			}
 		}
 		if(!found) {
-			return false;
+			return null;
 		}
 			// check whether this move is legal (based on checkmate)
 		if(!isLegalMove(move)) {
-			return false;
+			return null;
 		}
 		// execute the move complete
 		executeMoveComplete(move);
 		printBoard();
+		return move;
+	}
+	
+	/**
+	 * undo a move function used by the GUI
+	 */
+	public boolean undoAMove() {
+		if(moveHistorieStack.isEmpty()) {
+			return false;
+		}
+		undoMoveComplete();
 		return true;
 	}
 	
