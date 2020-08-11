@@ -34,6 +34,13 @@ public class Board {
 		gameState = GameState.Active;
 	}
 
+	
+	
+	public PlayerSide getCurrSide() {
+		return currSide;
+	}
+
+
 
 	/**
 	 * switch the currSide (the player to make the next move)
@@ -208,6 +215,9 @@ public class Board {
 		ArrayList<Piece> picesList = (currSide == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
 		for(int i = 0; i < picesList.size(); i++) {
 			Piece currPiece = picesList.get(i);
+			if(!currPiece.isAlive()) {
+				continue;
+			}
 			selectLegalMoves(currPiece.generatePossibleMoves(this), legalMovesList);
 		}
 		return legalMovesList;
@@ -219,11 +229,14 @@ public class Board {
 	public GameState checkGameState() {
 		LinkedList<Move> legalMoves = compileAllLegalMoves();
 		if(legalMoves.isEmpty()) {
+			printBoard();
 			if(isCheckMated(currSide)) {
 				gameState = currSide == PlayerSide.White ? GameState.BlackWin : GameState.WhiteWin;
 			} else {
 				gameState = GameState.Draw;
 			}
+		} else {
+			gameState = GameState.Active;
 		}
 		return gameState;
 	}
@@ -305,7 +318,7 @@ public class Board {
 		
 		// speical Castling move
 		if(move.isCastling()) {
-			System.out.println("executing castling");
+			
 			if(move.getEnd_x() < move.getStart_x()) { // left side castling
 				Piece rookPiece = (movedPiece.getSide() == PlayerSide.White) ? boardPiecesArray[59] : boardPiecesArray[3];
 				rookPiece.returnTo(0, movedPiece.getY_cor());
@@ -351,6 +364,7 @@ public class Board {
 	public void undoMoveComplete() {
 		undoMoveWithOutUpdatingHistory(moveHistorieStack.pop());
 		changeSide();
+		checkGameState();
 	}
 
 	/** 
@@ -406,7 +420,6 @@ public class Board {
 	 * Check whether it is legal to perform Castling for side
 	 */
 	public boolean isCastlingLegal(PlayerSide side, boolean leftSide) {
-		System.out.println(side);
 		/**
 		 * Castling
 		 * 1. King and Rook is not moved yet
@@ -417,7 +430,6 @@ public class Board {
 		// 1. check King is unmoved
 		Piece kingPiece = (side == PlayerSide.White) ? whiteKingPiece: blackKingPiece;
 		if(kingPiece.isMoved()) {
-			System.out.println("king piece moved");
 			return false;
 		}
 		// 1. check rook is unmoved
@@ -428,7 +440,6 @@ public class Board {
 			rookPiece = (side == PlayerSide.White) ? boardPiecesArray[63] : boardPiecesArray[7];
 		}
 		if(rookPiece.isMoved()) {
-			System.out.println("rook piece moved");
 			return false;
 		}
 		
@@ -437,16 +448,12 @@ public class Board {
 		if(leftSide) {
 			for(int x = 1; x <= 3; x++) {
 				if(!boardPiecesArray[x + y * 8].isEmpty()) {
-					System.out.println("blocked");
-					System.out.println(x);
 					return false;
 				}
 			}
 		} else {
 			for(int x = 5; x <= 6; x++) {
 				if(!boardPiecesArray[x + y * 8].isEmpty()) {
-					System.out.println("blocked");
-					System.out.println(x);
 					return false;
 				}
 			}
@@ -457,16 +464,12 @@ public class Board {
 		if(leftSide) {
 			for(int x = 2; x <= 3; x++) {
 				if(isUnderattack(attackingSide, x, y)) {
-					System.out.println("not safe");
-					System.out.println(x);
 					return false;
 				}
 			}
 		} else {
 			for(int x = 5; x <= 6; x++) {
 				if(isUnderattack(attackingSide, x, y)) {
-					System.out.println("not safe");
-					System.out.println(x);
 					return false;
 				}
 			}
@@ -528,6 +531,19 @@ public class Board {
 		return true;
 	}
 	
+	/**
+	 * resets isProtected of all the pieces of the current side to be false
+	 */
+	public void resetIsProtected() {
+		ArrayList<Piece> pieces = getCurrentSidePieces();
+		for(Piece piece : pieces) {
+			piece.setProtected(false);
+		}
+	}
+
+	public ArrayList<Piece> getCurrentSidePieces() {
+		return (currSide == PlayerSide.White) ? whitePiecesArrayList : blackPiecesArrayList;
+	}
 	// ==================================================================================================================
 	// 											DEBUG FUNCTIONS
 	// ==================================================================================================================

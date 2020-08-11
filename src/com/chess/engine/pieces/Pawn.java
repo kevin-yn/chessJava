@@ -70,27 +70,31 @@ public class Pawn extends Piece {
 		}
 		
 		// normal capture move
-		if(validCor(this.x_cor + 1, this.y_cor + direction) && board.getPlayerSide(this.x_cor + 1, this.y_cor + direction) == getOppositeSide(side)) {
-			Move newMove = new Move(this.x_cor, this.y_cor, this.x_cor + 1, this.y_cor + direction);
-			// check if Pawn Promotion
-			if(newMove.getEnd_y() == (this.side == PlayerSide.White ? 0 : 7)) {
-				newMove.setPawnPromotion();
-			}
-			possibleMoves.add(newMove);
-		}
-		if(validCor(this.x_cor - 1, this.y_cor + direction) && board.getPlayerSide(this.x_cor - 1, this.y_cor + direction) == getOppositeSide(side)) {
-			Move newMove = new Move(this.x_cor, this.y_cor, this.x_cor - 1, this.y_cor + direction);
-			// check if Pawn Promotion
-			if(newMove.getEnd_y() == (this.side == PlayerSide.White ? 0 : 7)) {
-				newMove.setPawnPromotion();
-			}
-			possibleMoves.add(newMove);
-		}
+		capturedMoveHelper(board, possibleMoves, this.x_cor + 1, this.y_cor + direction);
+		capturedMoveHelper(board, possibleMoves, this.x_cor - 1, this.y_cor + direction);
 		
-		// en Passnat move TODOTODO!!!!!!!!!
+		// en Passnat move
 		enPassantMoveHelper(board, possibleMoves, this.x_cor - 1);
 		enPassantMoveHelper(board, possibleMoves, this.x_cor + 1);
 		return possibleMoves;
+	}
+
+	private void capturedMoveHelper(Board board, LinkedList<Move> possibleMoves, int target_x, int target_y) {
+		if(validCor(target_x, target_y)) {
+			if(board.getPlayerSide(target_x, target_y) == this.side) {
+				// protecting ally piece
+				Piece allyPiece = board.getPiece(target_x, target_y);
+				allyPiece.setProtected(true);
+			} else if(board.getPlayerSide(target_x, target_y) == getOppositeSide(this.side)) {
+				Move newMove = new Move(this.x_cor, this.y_cor, target_x, target_y);
+				// check if Pawn Promotion
+				if(newMove.getEnd_y() == (this.side == PlayerSide.White ? 0 : 7)) {
+					newMove.setPawnPromotion();
+				}
+				newMove.setCaptureMove(true);
+				possibleMoves.add(newMove);
+			}
+		}
 	}
 
 	private Move enPassantMoveHelper(Board board, LinkedList<Move> possibleMoves, int x) {
@@ -110,6 +114,7 @@ public class Pawn extends Piece {
 								if(board.isEmptyAt(targetPiece.x_cor, targetPiece.y_cor + direction)) {
 									Move newMove = new Move(this.x_cor, this.y_cor, x, this.y_cor + direction);
 									newMove.setEnPassant();
+									newMove.setCaptureMove(true);
 									possibleMoves.add(newMove);
 									return newMove;
 								}

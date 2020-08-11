@@ -43,7 +43,6 @@ public class Queen extends Bishop_Rook_Queen {
 			}
 			return isPathOpen(target_x_cor, target_y_cor, x_cor, y_cor, increment_x, increment_y, board);
 		} else if(Math.abs(this.x_cor - target_x_cor) == Math.abs(this.y_cor - target_y_cor)) { // same diagonal line
-			System.out.println("Queen might attack");
 			int increment_x = target_x_cor > this.x_cor ? 1 : -1;
 			int increment_y = target_y_cor > this.y_cor ? 1 : -1;
 			return isPathOpen(target_x_cor, target_y_cor, this.x_cor, this.y_cor , increment_x, increment_y, board);

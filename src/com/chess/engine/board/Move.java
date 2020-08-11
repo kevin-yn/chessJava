@@ -13,7 +13,7 @@ public class Move {
 	private boolean isCastling;
 	private boolean isEnPassant;
 	private boolean isPawnPromotion;
-	
+	private boolean isCaptureMove;
 	
 	
 	public boolean isPawnPromotion() {
@@ -22,6 +22,14 @@ public class Move {
 
 	public void setPawnPromotion() {
 		this.isPawnPromotion = true;
+	}
+
+	public boolean isCaptureMove() {
+		return isCaptureMove;
+	}
+
+	public void setCaptureMove(boolean isCaptureMove) {
+		this.isCaptureMove = isCaptureMove;
 	}
 
 	public boolean isEnPassant() {
@@ -98,9 +106,7 @@ public class Move {
 		if(start_x == end_x && start_y == end_y) {
 			System.err.println("illegal instance of move");
 		}
-		isCastling = false;
-		isEnPassant = false;
-		isPawnPromotion = false;
+		setDefaultFlags();
 	}
 	
 	public Move(int sou_index, int des_index) {
@@ -113,8 +119,17 @@ public class Move {
 		if(sou_index == des_index) {
 			System.err.println("illegal instance of move");
 		}
+		setDefaultFlags();
+	}
+	
+	private void setDefaultFlags() {
 		isCastling = false;
 		isEnPassant = false;
 		isPawnPromotion = false;
+		isCaptureMove = false;
+	}
+	
+	public void printMove() {
+		System.out.print("From " + start_x + ", " + start_y + "     To " + end_x + ", " + end_y);
 	}
 }

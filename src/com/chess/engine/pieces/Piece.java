@@ -11,7 +11,16 @@ public abstract class Piece {
 	protected int y_cor;
 	protected PlayerSide side;
 	protected int moveCount; // to record the number of times this Piece is moved
+	protected boolean isProtected;
 	
+	public boolean isProtected() {
+		return isProtected;
+	}
+
+	public void setProtected(boolean isProtected) {
+		this.isProtected = isProtected;
+	}
+
 	public void moveTo(int x_cor, int y_cor) {
 		this.x_cor = x_cor;
 		this.y_cor = y_cor;
@@ -68,7 +77,7 @@ public abstract class Piece {
 	protected boolean validCor(int x, int y) {
 		return x >= 0 && x <= 7 && y >= 0 && y <= 7;
 	}
-	
+
 	// Constructors
 	
 	public Piece(PlayerSide side, int index) {
@@ -77,6 +86,7 @@ public abstract class Piece {
 		this.side = side;
 		alive = true;
 		moveCount = 0;
+		isProtected = false;
 	}
 	
 	public boolean isAlive() {

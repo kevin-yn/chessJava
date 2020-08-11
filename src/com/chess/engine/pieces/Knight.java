@@ -10,7 +10,7 @@ public class Knight extends Piece {
 	public Knight(PlayerSide side, int index) {
 		super(side, index);
 	}
-	
+	 
 	@Override
 	public boolean isEmpty() {
 		return false;
@@ -45,9 +45,16 @@ public class Knight extends Piece {
 			return;
 		}
 		if(board.getPlayerSide(target_x, target_y) == this.side) { // check if ally piece 
+			// set isProtectedStatus of this piece to true
+			Piece allyPiece = board.getPiece(target_x, target_y);
+			allyPiece.setProtected(true);
 			return;
 		}
-		possibleMoves.add(new Move(this.x_cor, this.y_cor, target_x, target_y));
+		Move newMove = new Move(this.x_cor, this.y_cor, target_x, target_y);
+		if(board.getPlayerSide(target_x, target_y) != PlayerSide.EmptySpot) { // check if opposite piece 
+			newMove.setCaptureMove(true);
+		}
+		possibleMoves.add(newMove);
 	}
 	
 	@Override

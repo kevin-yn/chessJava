@@ -21,13 +21,18 @@ public abstract class Bishop_Rook_Queen extends Piece {
 			}
 			PlayerSide thisSide = board.getPlayerSide(x, y);
 			if(thisSide == this.side) {
+				// set isProtectedStatus of this piece to true
+				Piece allyPiece = board.getPiece(x, y);
+				allyPiece.setProtected(true);
 				break;
 			} else if(thisSide == PlayerSide.EmptySpot) {
 				possibleMoves.add(new Move(this.x_cor, this.y_cor, x, y));
 				x += x_increment;
 				y += y_increment;
 			} else { // this is a capture move
-				possibleMoves.add(new Move(this.x_cor, this.y_cor, x, y));
+				Move move = new Move(this.x_cor, this.y_cor, x, y);
+				move.setCaptureMove(true);
+				possibleMoves.add(move);
 				break;
 			}
 		}
@@ -45,7 +50,6 @@ public abstract class Bishop_Rook_Queen extends Piece {
 	 * @return
 	 */
 	protected boolean isPathOpen(int end_x, int end_y, int start_x, int start_y, int increment_x, int increment_y, Board board) {
-		System.out.println("isPathOpen called");
 		start_x += increment_x;
 		start_y += increment_y;
 		while(start_x != end_x || start_y != end_y) {

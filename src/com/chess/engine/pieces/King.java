@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
+import com.chess.engine.pieces.Piece.PlayerSide;
 
 public class King extends Piece {
 	/**
@@ -15,7 +16,7 @@ public class King extends Piece {
 		super(side, index);
 	}
 	
-	@Override
+	@Override 
 	public boolean isEmpty() {
 		return false;
 	}
@@ -27,6 +28,9 @@ public class King extends Piece {
 
 	@Override
 	public boolean isAttacking(final Board board, int target_x_cor, int target_y_cor) {
+		if(Math.abs(target_x_cor - x_cor) <= 1 && Math.abs(target_y_cor - y_cor) <= 1) {
+			return true;
+		}
 		return false;
 	}
 	
@@ -46,19 +50,13 @@ public class King extends Piece {
 		if(board.isCastlingLegal(this.side, true)) {
 			Move move = new Move(this.x_cor, this.y_cor, 2, this.y_cor);
 			move.setCastling();
-			System.out.println("Left Castling is legal");
 			possibleMoves.add(move);
-		} else {
-			System.out.println("Left Castling is NOT legal");
 		}
 		
 		if(board.isCastlingLegal(this.side, false)) {
 			Move move = new Move(this.x_cor, this.y_cor, 6, this.y_cor);
 			move.setCastling();
-			System.out.println("Right Castling is legal");
 			possibleMoves.add(move);
-		} else {
-			System.out.println("Right Castling is NOT legal");
 		}
 		return possibleMoves;
 	}
@@ -68,9 +66,16 @@ public class King extends Piece {
 			return;
 		}
 		if(board.getPlayerSide(target_x, target_y) == this.side) { // check if ally piece 
+			// set isProtectedStatus of this piece to true
+			Piece allyPiece = board.getPiece(target_x, target_y);
+			allyPiece.setProtected(true);
 			return;
 		}
-		possibleMoves.add(new Move(this.x_cor, this.y_cor, target_x, target_y));
+		Move newMove = new Move(this.x_cor, this.y_cor, target_x, target_y);
+		if(board.getPlayerSide(target_x, target_y) != PlayerSide.EmptySpot) { // check if opposite piece 
+			newMove.setCaptureMove(true);
+		}
+		possibleMoves.add(newMove);
 	}
 	
 	

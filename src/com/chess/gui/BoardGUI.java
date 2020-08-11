@@ -29,6 +29,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
+import com.chess.ai_player.AIPlayer;
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
 import com.chess.engine.board.Board.GameState;
@@ -39,7 +40,6 @@ import com.chess.engine.pieces.Piece.PieceType;
 import com.chess.engine.pieces.Piece.PlayerSide;
 import com.chess.engine.pieces.Queen;
 import com.chess.engine.pieces.Rook;
-import com.sun.webkit.PopupMenu;
 
 
 public class BoardGUI {
@@ -60,10 +60,9 @@ public class BoardGUI {
 	private final JLabel displayJLabel;
 	private final BoardPanel boardPanel;
 	private Board chessBoard;
+	private final AIPlayer aiPlayer = new AIPlayer();
 	private JPopupMenu pawnPromotionPopupMenu;
 	private int sou_index = NOT_SELECTED;
-	private Piece promotedPiece = null;
-	
 	// Constructor
 	public BoardGUI() {
 		this.chessBoard = new Board();
@@ -150,7 +149,7 @@ public class BoardGUI {
 		}
 
     	protected void updateBoard() {
-    		GameState gameState = chessBoard.getGameState();
+    		GameState gameState = chessBoard.checkGameState();
     		switch (gameState) {
 			case Active:
 				displayJLabel.setText(chessBoard.getCurrentSideString() + currentPlayerDisplayString);
@@ -215,6 +214,13 @@ public class BoardGUI {
 								boardPanel.updateBoard();
 							}
 							resetSelection();
+							
+							// if currentSide is Black, let the AI player makes a move
+							if(chessBoard.getCurrSide() == PlayerSide.Black) {
+								move = aiPlayer.determine_best_move(chessBoard, 3);
+								chessBoard.makeAMove(move);
+								boardPanel.updateBoard();
+							}
 						}
 					} else if(isRightMouseButton(e)) {
 						resetSelection();
