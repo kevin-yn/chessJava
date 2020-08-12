@@ -17,17 +17,18 @@ import com.chess.engine.pieces.Piece.PlayerSide;
  *
  */
 public class AIPlayer {
+	private static final int DEFAULT_VALUE = 100000000;
 	private static int CONSTANT_PAWN = 1;
-	private static int CONSTANT_ROOK = 1;
-	private static int CONSTANT_KNIGHT = 1;
-	private static int CONSTANT_BISHOP = 1;
-	private static int CONSTANT_QUEEN = 1;
-	private static int CONSTANT_PIECE_POSSESSION = 1;
+	private static int CONSTANT_ROOK = 5;
+	private static int CONSTANT_KNIGHT = 4;
+	private static int CONSTANT_BISHOP = 5;
+	private static int CONSTANT_QUEEN = 10;
+	private static int CONSTANT_PIECE_POSSESSION = 3;
 	private static int CONSTANT_PAWN_ADVANCEMENT = 1;
 	private static int CONSTANT_PIECE_MOBILITY = 1;
-	private static int CONSTANT_PIECE_THREATS = 1;
+	private static int CONSTANT_PIECE_THREATS = 2;
 	private static int CONSTANT_PIECE_PROTECTS = 1;
-	public Move bestMove;
+	public Move bestMove = null;
 	
 	/**
 	 * White: positive
@@ -41,10 +42,10 @@ public class AIPlayer {
 	private int evaluate_board(Board board) {
 		// first check whether the game has ended
 		if(board.getGameState() == GameState.WhiteWin) {
-			return 10000000;
+			return DEFAULT_VALUE;
 		} else if(board.getGameState() == GameState.BlackWin) {
 			// board.printBoard();
-			return -10000000;
+			return -1 * DEFAULT_VALUE;
 		}
 		
 		
@@ -156,20 +157,28 @@ public class AIPlayer {
 	}
 
 	
-	private int determine_best_move(Board board, int depth, int currentDepth) {
+	private int determine_best_move(Board board, int depth, int currentDepth, int alpha_beta) {
 		// base case
 		if(depth == currentDepth) {
 			int result = evaluate_board(board);
 			return result;
 		}
 		Move bestMoveSoFar = null;
-		int bestScoreSoFar = board.getCurrSide() == PlayerSide.White ? -1000000 : 1000000;
+		int bestScoreSoFar = board.getCurrSide() == PlayerSide.White ? -DEFAULT_VALUE : DEFAULT_VALUE;
 		LinkedList<Move> legalMoves = board.compileAllLegalMoves();
 		PlayerSide currSide = board.getCurrSide();
 		for(Move move : legalMoves) {
 			// execute each move, and go deeper
 			board.executeMoveComplete(move);
-			int score = determine_best_move(board, depth, currentDepth + 1);
+			int score = determine_best_move(board, depth, currentDepth + 1, bestScoreSoFar);
+			// first check alpha_beta value
+			if((currSide == PlayerSide.White && score > alpha_beta) 
+					|| (currSide == PlayerSide.Black && score < alpha_beta)) {
+				board.undoMoveComplete();
+				return score;
+			}
+			
+			
 			if((currSide == PlayerSide.White && score > bestScoreSoFar) 
 					|| (currSide == PlayerSide.Black && score < bestScoreSoFar)) {
 				bestMoveSoFar = move;
@@ -185,13 +194,8 @@ public class AIPlayer {
 	}
 	
 	public Move determine_best_move(Board board, int depth) {
-		System.out.println("--------------------");
-		board.printBoard();
-		determine_best_move(board, depth, 0);
-		
-		board.printBoard();
-		System.out.println("--------------------");
-		bestMove.printMove();
+		int alpha_beta = board.getCurrSide() == PlayerSide.White ? DEFAULT_VALUE : -DEFAULT_VALUE;
+		determine_best_move(board, depth, 0, alpha_beta);
 		return bestMove;
 	}
 	
@@ -199,7 +203,7 @@ public class AIPlayer {
 		Board board = new Board();
 		AIPlayer player = new AIPlayer();
 		player.evaluate_board(board);
-		player.determine_best_move(board, 4, 0);
+		player.determine_best_move(board, 5);
 		System.out.println(" finished ");
 		player.bestMove.printMove();
 	}

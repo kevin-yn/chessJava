@@ -126,6 +126,18 @@ public class BoardGUI {
 			}
 		});
         fileMenu.add(exitMenuItem);
+        
+        final JMenuItem aiPlayerMenuItem = new JMenuItem("AI plays");
+        aiPlayerMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Move move = aiPlayer.determine_best_move(chessBoard, 4);
+				chessBoard.makeAMove(move);
+				boardPanel.updateBoard();
+			}
+		});
+        fileMenu.add(aiPlayerMenuItem);
         return fileMenu;
     }
     // BoardPanel class
@@ -215,12 +227,12 @@ public class BoardGUI {
 							}
 							resetSelection();
 							
-							// if currentSide is Black, let the AI player makes a move
-							if(chessBoard.getCurrSide() == PlayerSide.Black) {
-								move = aiPlayer.determine_best_move(chessBoard, 3);
-								chessBoard.makeAMove(move);
-								boardPanel.updateBoard();
-							}
+//							// if currentSide is Black, let the AI player makes a move
+//							if(chessBoard.getCurrSide() == PlayerSide.Black) {
+//								move = aiPlayer.determine_best_move(chessBoard, 3);
+//								chessBoard.makeAMove(move);
+//								boardPanel.updateBoard();
+//							}
 						}
 					} else if(isRightMouseButton(e)) {
 						resetSelection();

@@ -179,6 +179,7 @@ public class Board {
 			x_cor = blackKingPiece.getX_cor();
 			y_cor = blackKingPiece.getY_cor();
 		}
+//		printBoard();
 		return isUnderattack(attackingSide, x_cor, y_cor);
 	}
 
@@ -229,7 +230,7 @@ public class Board {
 	public GameState checkGameState() {
 		LinkedList<Move> legalMoves = compileAllLegalMoves();
 		if(legalMoves.isEmpty()) {
-			printBoard();
+			// printBoard();
 			if(isCheckMated(currSide)) {
 				gameState = currSide == PlayerSide.White ? GameState.BlackWin : GameState.WhiteWin;
 			} else {
@@ -299,7 +300,7 @@ public class Board {
 		Piece capturedPiece = move.getCaptured_piece();
 
 		
-		boolean original_status_debug = capturedPiece.setAlive(); // set capturedPiece as dead
+		boolean original_status_debug = capturedPiece.setAlive(); // set capturedPiece as alive
 		// DEBUG
 		if(original_status_debug) {
 			System.err.println("undoMoveWithOutUpdating ERROR");
